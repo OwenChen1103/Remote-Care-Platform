@@ -19,7 +19,7 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
+  const demoUser = await prisma.user.upsert({
     where: { email: 'demo@remotecare.dev' },
     update: {},
     create: {
@@ -32,7 +32,26 @@ async function main() {
     },
   });
 
-  console.log('Seed completed: admin@remotecare.dev + demo@remotecare.dev');
+  const existingRecipient = await prisma.recipient.findFirst({
+    where: { caregiver_id: demoUser.id, name: '王奶奶', deleted_at: null },
+  });
+
+  if (!existingRecipient) {
+    await prisma.recipient.create({
+      data: {
+        caregiver_id: demoUser.id,
+        name: '王奶奶',
+        date_of_birth: new Date('1945-03-15'),
+        gender: 'female',
+        medical_tags: ['高血壓', '糖尿病'],
+        emergency_contact_name: '王小明',
+        emergency_contact_phone: '0912345678',
+        notes: '行動不便，需輪椅',
+      },
+    });
+  }
+
+  console.log('Seed completed: admin + demo user + demo recipient');
 }
 
 main()
