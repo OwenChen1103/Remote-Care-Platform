@@ -1,0 +1,36 @@
+{
+  "name": "@remote-care/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --forceExit",
+    "build:preview": "eas build --profile preview"
+  },
+  "dependencies": {
+    "@remote-care/shared": "workspace:*",
+    "expo": "~52.0.0",
+    "expo-constants": "~17.0.0",
+    "expo-router": "~4.0.0",
+    "expo-secure-store": "~14.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.7",
+    "react-native-safe-area-context": "4.14.1",
+    "react-native-screens": "~4.4.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/react": "~18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "jest-expo": "~52.0.0",
+    "typescript": "^5.7.0"
+  }
+}

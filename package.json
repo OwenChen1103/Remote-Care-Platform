@@ -1,0 +1,24 @@
+{
+  "name": "remote-care",
+  "private": true,
+  "scripts": {
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:migrate": "cd apps/web && pnpm prisma migrate dev",
+    "db:seed": "cd apps/web && pnpm prisma db seed",
+    "db:studio": "cd apps/web && pnpm prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "prettier": "^3.5.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

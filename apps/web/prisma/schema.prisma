@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String   @unique @db.VarChar(255)
+  password_hash String   @db.VarChar(255)
+  name          String   @db.VarChar(100)
+  phone         String?  @db.VarChar(20)
+  role          String   @default("caregiver") @db.VarChar(20)
+  timezone      String   @default("Asia/Taipei") @db.VarChar(50)
+  created_at    DateTime @default(now()) @db.Timestamptz
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  recipients      Recipient[]
+  service_requests ServiceRequest[]
+  notifications   Notification[]
+
+  @@map("users")
+}
+
+model Recipient {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caregiver_id             String    @db.Uuid
+  name                     String    @db.VarChar(100)
+  date_of_birth            DateTime? @db.Date
+  gender                   String?   @db.VarChar(10)
+  medical_tags             Json      @default("[]")
+  emergency_contact_name   String?   @db.VarChar(100)
+  emergency_contact_phone  String?   @db.VarChar(20)
+  notes                    String?   @db.Text
+  deleted_at               DateTime? @db.Timestamptz
+  created_at               DateTime  @default(now()) @db.Timestamptz
+  updated_at               DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  caregiver             User                 @relation(fields: [caregiver_id], references: [id])
+  measurements          Measurement[]
+  ai_reports            AiReport[]
+  appointments          Appointment[]
+  service_requests      ServiceRequest[]
+  measurement_reminders MeasurementReminder[]
+
+  @@index([caregiver_id])
+  @@index([caregiver_id, deleted_at])
+  @@map("recipients")
+}
+
+model Measurement {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id   String   @db.Uuid
+  type           String   @db.VarChar(20)
+  systolic       Int?
+  diastolic      Int?
+  heart_rate     Int?
+  glucose_value  Decimal? @db.Decimal(5, 1)
+  glucose_timing String?  @db.VarChar(20)
+  unit           String   @db.VarChar(10)
+  source         String   @default("manual") @db.VarChar(20)
+  device_id      String?  @db.VarChar(100)
+  is_abnormal    Boolean  @default(false)
+  note           String?  @db.Text
+  measured_at    DateTime @db.Timestamptz
+  created_at     DateTime @default(now()) @db.Timestamptz
+
+  recipient Recipient @relation(fields: [recipient_id], references: [id])
+
+  @@index([recipient_id, type, measured_at(sort: Desc)])
+  @@index([recipient_id, measured_at(sort: Desc)])
+  @@map("measurements")
+}
+
+model AiReport {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id  String   @db.Uuid
+  report_type   String   @db.VarChar(30)
+  status_label  String   @db.VarChar(20)
+  summary       String   @db.Text
+  reasons       Json
+  suggestions   Json
+  raw_prompt    String?  @db.Text
+  raw_response  String?  @db.Text
+  model         String   @db.VarChar(50)
+  input_tokens  Int?
+  output_tokens Int?
+  generated_at  DateTime @default(now()) @db.Timestamptz
+  created_at    DateTime @default(now()) @db.Timestamptz
+
+  recipient Recipient @relation(fields: [recipient_id], references: [id])
+
+  @@index([recipient_id, generated_at(sort: Desc)])
+  @@map("ai_reports")
+}
+
+model Appointment {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id     String   @db.Uuid
+  title            String   @db.VarChar(200)
+  hospital_name    String?  @db.VarChar(200)
+  department       String?  @db.VarChar(100)
+  doctor_name      String?  @db.VarChar(100)
+  appointment_date DateTime @db.Timestamptz
+  note             String?  @db.Text
+  created_at       DateTime @default(now()) @db.Timestamptz
+  updated_at       DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  recipient Recipient @relation(fields: [recipient_id], references: [id])
+
+  @@index([recipient_id, appointment_date])
+  @@map("appointments")
+}
+
+model ServiceCategory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  is_active   Boolean  @default(true)
+  sort_order  Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz
+
+  service_requests ServiceRequest[]
+
+  @@map("service_categories")
+}
+
+model ServiceRequest {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caregiver_id         String    @db.Uuid
+  recipient_id         String    @db.Uuid
+  category_id          String    @db.Uuid
+  status               String    @default("submitted") @db.VarChar(20)
+  preferred_date       DateTime  @db.Timestamptz
+  preferred_time_slot  String?   @db.VarChar(20)
+  location             String    @db.VarChar(500)
+  description          String    @db.Text
+  assigned_provider_id String?   @db.Uuid
+  admin_note           String?   @db.Text
+  created_at           DateTime  @default(now()) @db.Timestamptz
+  updated_at           DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  caregiver         User             @relation(fields: [caregiver_id], references: [id])
+  recipient         Recipient        @relation(fields: [recipient_id], references: [id])
+  category          ServiceCategory  @relation(fields: [category_id], references: [id])
+  assigned_provider Provider?        @relation(fields: [assigned_provider_id], references: [id])
+
+  @@index([caregiver_id, status])
+  @@index([status, created_at(sort: Desc)])
+  @@map("service_requests")
+}
+
+model Provider {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String    @db.VarChar(100)
+  phone            String?   @db.VarChar(20)
+  email            String?   @db.VarChar(255)
+  specialties      Json      @default("[]")
+  certifications   Json      @default("[]")
+  experience_years Int?
+  service_areas    Json      @default("[]")
+  review_status    String    @default("pending") @db.VarChar(20)
+  admin_note       String?   @db.Text
+  deleted_at       DateTime? @db.Timestamptz
+  created_at       DateTime  @default(now()) @db.Timestamptz
+  updated_at       DateTime  @default(now()) @updatedAt @db.Timestamptz
+
+  documents        ProviderDocument[]
+  service_requests ServiceRequest[]
+
+  @@index([review_status])
+  @@map("providers")
+}
+
+model ProviderDocument {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider_id   String   @db.Uuid
+  file_name     String   @db.VarChar(255)
+  file_key      String   @db.VarChar(500)
+  file_size     Int
+  mime_type     String   @db.VarChar(100)
+  document_type String   @db.VarChar(50)
+  uploaded_at   DateTime @default(now()) @db.Timestamptz
+
+  provider Provider @relation(fields: [provider_id], references: [id])
+
+  @@index([provider_id])
+  @@map("provider_documents")
+}
+
+model Notification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  type       String   @db.VarChar(30)
+  title      String   @db.VarChar(200)
+  body       String   @db.Text
+  data       Json?
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, is_read, created_at(sort: Desc)])
+  @@map("notifications")
+}
+
+model MeasurementReminder {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient_id  String   @db.Uuid
+  reminder_type String   @db.VarChar(20)
+  reminder_time DateTime @db.Time
+  is_enabled    Boolean  @default(true)
+  created_at    DateTime @default(now()) @db.Timestamptz
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  recipient Recipient @relation(fields: [recipient_id], references: [id])
+
+  @@unique([recipient_id, reminder_type])
+  @@map("measurement_reminders")
+}

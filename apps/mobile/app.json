@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "遠端照護",
+    "slug": "remote-care-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "remote-care",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.remotecare.mobile"
+    },
+    "android": {
+      "package": "com.remotecare.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiUrl": "${EXPO_PUBLIC_API_URL}"
+    }
+  }
+}
