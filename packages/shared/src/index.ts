@@ -5,6 +5,7 @@ export * from './schemas/measurement';
 export * from './schemas/service-request';
 export * from './schemas/provider';
 export * from './schemas/api-response';
+export * from './schemas/ai';
 
 // Constants
 export * from './constants/error-codes';

@@ -136,6 +136,12 @@ export default function HealthScreen() {
           >
             <Text style={styles.actionText}>匯出</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.actionButtonAi]}
+            onPress={() => router.push('/(tabs)/health/ai-report')}
+          >
+            <Text style={[styles.actionText, styles.actionTextAi]}>AI 放心報</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -211,6 +217,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionText: { fontSize: 14, fontWeight: '600', color: '#1d4ed8' },
+  actionButtonAi: { backgroundColor: '#f0fdf4' },
+  actionTextAi: { color: '#166534' },
   list: { padding: 12 },
   card: {
     backgroundColor: '#fff',
