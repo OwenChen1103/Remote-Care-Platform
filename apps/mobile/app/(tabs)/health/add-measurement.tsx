@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   toggleActive: { backgroundColor: '#3b82f6' },
   toggleText: { fontSize: 16, fontWeight: '600', color: '#374151' },
   toggleTextActive: { color: '#fff' },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 4, marginTop: 12 },
+  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 14 },
   input: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -253,10 +253,10 @@ const styles = StyleSheet.create({
   timingActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
   timingText: { color: '#374151', fontWeight: '500' },
   timingTextActive: { color: '#fff' },
-  error: { color: '#dc2626', marginBottom: 12, fontSize: 14 },
+  error: { color: '#dc2626', backgroundColor: '#fef2f2', padding: 12, borderRadius: 8, textAlign: 'center', marginBottom: 12, fontSize: 14, overflow: 'hidden' },
   submitButton: {
     backgroundColor: '#3b82f6',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     marginTop: 24,

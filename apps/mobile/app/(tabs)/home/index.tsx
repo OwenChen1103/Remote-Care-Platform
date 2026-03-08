@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
   header: { flexDirection: 'row' as const, alignItems: 'center' as const, justifyContent: 'space-between' as const, paddingRight: 16 },
-  welcome: { fontSize: 18, fontWeight: '600', color: '#333', padding: 16, paddingBottom: 8 },
+  welcome: { fontSize: 18, fontWeight: '600', color: '#1f2937', padding: 16, paddingBottom: 8 },
   logoutButton: { backgroundColor: '#ef4444', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 6 },
   logoutText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   list: { padding: 16, paddingTop: 8 },
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   tag: { backgroundColor: '#dbeafe', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3 },
   tagText: { fontSize: 12, color: '#1d4ed8' },
   emptyText: { fontSize: 16, color: '#9ca3af', textAlign: 'center' },
-  errorText: { fontSize: 16, color: '#dc2626', marginBottom: 12 },
+  errorText: { fontSize: 14, color: '#dc2626', backgroundColor: '#fef2f2', padding: 12, borderRadius: 8, textAlign: 'center', marginBottom: 12, overflow: 'hidden' },
   retryButton: { backgroundColor: '#3b82f6', borderRadius: 8, paddingHorizontal: 20, paddingVertical: 10 },
   retryText: { color: '#fff', fontWeight: '600' },
   fab: {

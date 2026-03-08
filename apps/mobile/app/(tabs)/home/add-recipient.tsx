@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   content: { padding: 16 },
   title: { fontSize: 22, fontWeight: 'bold', color: '#1f2937', marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 4, marginTop: 12 },
+  label: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 14 },
   input: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -153,10 +153,10 @@ const styles = StyleSheet.create({
   genderActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
   genderText: { color: '#374151', fontWeight: '500' },
   genderTextActive: { color: '#fff' },
-  error: { color: '#dc2626', marginBottom: 12, fontSize: 14 },
+  error: { color: '#dc2626', backgroundColor: '#fef2f2', padding: 12, borderRadius: 8, textAlign: 'center', marginBottom: 12, fontSize: 14, overflow: 'hidden' },
   submitButton: {
     backgroundColor: '#3b82f6',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     marginTop: 24,

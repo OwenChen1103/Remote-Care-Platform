@@ -127,7 +127,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
   inner: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#333', marginBottom: 32 },
+  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#1f2937', marginBottom: 32 },
   error: {
     backgroundColor: '#fef2f2',
     color: '#dc2626',
@@ -140,14 +140,14 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#d1d5db',
     borderRadius: 8,
-    padding: 14,
+    padding: 12,
     fontSize: 16,
     marginBottom: 12,
   },
   button: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#3b82f6',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
@@ -156,5 +156,5 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  link: { color: '#2563eb', textAlign: 'center', fontSize: 14 },
+  link: { color: '#3b82f6', textAlign: 'center', fontSize: 14 },
 });
