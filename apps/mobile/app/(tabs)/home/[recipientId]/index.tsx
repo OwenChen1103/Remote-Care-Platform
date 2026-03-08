@@ -10,6 +10,17 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api, ApiError } from '@/lib/api-client';
 
+interface RecentMeasurement {
+  id: string;
+  type: string;
+  systolic: number | null;
+  diastolic: number | null;
+  glucose_value: number | null;
+  glucose_timing: string | null;
+  is_abnormal: boolean;
+  measured_at: string;
+}
+
 interface Recipient {
   id: string;
   caregiver_id: string;
@@ -46,6 +57,7 @@ export default function RecipientDetailScreen() {
   const { recipientId } = useLocalSearchParams<{ recipientId: string }>();
   const router = useRouter();
   const [recipient, setRecipient] = useState<Recipient | null>(null);
+  const [recentMeasurements, setRecentMeasurements] = useState<RecentMeasurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -55,6 +67,15 @@ export default function RecipientDetailScreen() {
     try {
       const data = await api.get<Recipient>(`/recipients/${recipientId}`);
       setRecipient(data);
+      // Fetch recent measurements (best-effort, don't block on failure)
+      try {
+        const measurements = await api.get<RecentMeasurement[]>(
+          `/measurements?recipient_id=${recipientId}&limit=5`,
+        );
+        setRecentMeasurements(measurements);
+      } catch {
+        // Non-critical — don't block detail view
+      }
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.message);
@@ -131,6 +152,51 @@ export default function RecipientDetailScreen() {
         <Text style={styles.value}>{recipient.notes ?? '-'}</Text>
       </View>
 
+      {/* Quick actions */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity
+          style={styles.quickButton}
+          onPress={() => router.push(`/(tabs)/health/add-measurement?recipientId=${recipientId}&type=blood_pressure`)}
+        >
+          <Text style={styles.quickButtonText}>記錄血壓</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.quickButton}
+          onPress={() => router.push(`/(tabs)/health/add-measurement?recipientId=${recipientId}&type=blood_glucose`)}
+        >
+          <Text style={styles.quickButtonText}>記錄血糖</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.quickButton}
+          onPress={() => router.push(`/(tabs)/health/trends?recipientId=${recipientId}`)}
+        >
+          <Text style={styles.quickButtonText}>看趨勢</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Recent measurements */}
+      {recentMeasurements.length > 0 && (
+        <View style={styles.recentSection}>
+          <Text style={styles.recentTitle}>最近量測</Text>
+          {recentMeasurements.map((m) => (
+            <View key={m.id} style={[styles.measurementRow, m.is_abnormal && styles.measurementAbnormal]}>
+              <Text style={styles.measurementType}>
+                {m.type === 'blood_pressure' ? '血壓' : '血糖'}
+              </Text>
+              <Text style={styles.measurementValue}>
+                {m.type === 'blood_pressure'
+                  ? `${m.systolic}/${m.diastolic}`
+                  : `${m.glucose_value}`}
+              </Text>
+              {m.is_abnormal && <Text style={styles.abnormalBadge}>異常</Text>}
+              <Text style={styles.measurementTime}>
+                {new Date(m.measured_at).toLocaleDateString('zh-TW')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <TouchableOpacity
         style={styles.editButton}
         onPress={() => router.push(`/(tabs)/home/${recipientId}/edit`)}
@@ -159,6 +225,26 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 12, color: '#6b7280', marginBottom: 4 },
   value: { fontSize: 16, color: '#1f2937' },
+  quickActions: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 12 },
+  quickButton: {
+    flex: 1, backgroundColor: '#dbeafe', borderRadius: 8,
+    paddingVertical: 12, alignItems: 'center',
+  },
+  quickButtonText: { fontSize: 14, fontWeight: '600', color: '#1d4ed8' },
+  recentSection: { marginTop: 8, marginBottom: 8 },
+  recentTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  measurementRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#fff', borderRadius: 8, padding: 10, marginBottom: 4,
+  },
+  measurementAbnormal: { borderLeftWidth: 3, borderLeftColor: '#dc2626' },
+  measurementType: { fontSize: 13, color: '#6b7280', width: 36 },
+  measurementValue: { fontSize: 15, fontWeight: '600', color: '#1f2937', flex: 1 },
+  abnormalBadge: {
+    fontSize: 11, fontWeight: '600', color: '#dc2626',
+    backgroundColor: '#fef2f2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4,
+  },
+  measurementTime: { fontSize: 12, color: '#9ca3af' },
   editButton: {
     backgroundColor: '#3b82f6',
     borderRadius: 8,
