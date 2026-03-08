@@ -195,7 +195,8 @@ const styles = StyleSheet.create({
   periodTextActive: { color: '#1d4ed8', fontWeight: '600' },
   statsGrid: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   statCard: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 10, padding: 14, alignItems: 'center',
+    flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 14, alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
   },
   statCardDanger: {},
   statLabel: { fontSize: 12, color: '#6b7280', marginBottom: 4 },
@@ -205,7 +206,8 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginTop: 16, marginBottom: 8 },
   dailyRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 8, padding: 12, marginBottom: 4, gap: 8,
+    backgroundColor: '#fff', borderRadius: 12, padding: 12, marginBottom: 6, gap: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2, elevation: 1,
   },
   dailyRowAbnormal: { borderLeftWidth: 3, borderLeftColor: '#dc2626' },
   dailyDate: { fontSize: 14, color: '#374151', width: 90 },
@@ -216,5 +218,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#fef2f2', width: 22, height: 22, textAlign: 'center', lineHeight: 22, borderRadius: 11,
   },
   emptyText: { fontSize: 16, color: '#9ca3af', textAlign: 'center' },
-  errorText: { fontSize: 16, color: '#dc2626' },
+  errorText: { fontSize: 14, color: '#dc2626', backgroundColor: '#fef2f2', padding: 12, borderRadius: 8, textAlign: 'center', overflow: 'hidden' },
 });
