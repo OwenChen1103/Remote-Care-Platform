@@ -84,12 +84,33 @@ export async function POST(request: NextRequest) {
 
     const { date_of_birth, ...rest } = parsed.data;
 
-    const recipient = await prisma.recipient.create({
-      data: {
-        ...rest,
-        date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
-        caregiver_id: auth.userId,
-      },
+    const recipient = await prisma.$transaction(async (tx) => {
+      const created = await tx.recipient.create({
+        data: {
+          ...rest,
+          date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
+          caregiver_id: auth.userId,
+        },
+      });
+
+      await tx.measurementReminder.createMany({
+        data: [
+          {
+            recipient_id: created.id,
+            reminder_type: 'morning',
+            reminder_time: new Date('1970-01-01T08:00:00Z'),
+            is_enabled: true,
+          },
+          {
+            recipient_id: created.id,
+            reminder_type: 'evening',
+            reminder_time: new Date('1970-01-01T20:00:00Z'),
+            is_enabled: true,
+          },
+        ],
+      });
+
+      return created;
     });
 
     return successResponse(formatRecipient(recipient), 201);

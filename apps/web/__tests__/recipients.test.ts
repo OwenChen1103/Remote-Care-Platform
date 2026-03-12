@@ -12,6 +12,10 @@ const { mockPrisma } = vi.hoisted(() => {
       update: vi.fn(),
       count: vi.fn(),
     },
+    measurementReminder: {
+      createMany: vi.fn(),
+    },
+    $transaction: vi.fn(),
   };
   return { mockPrisma };
 });
@@ -80,7 +84,9 @@ beforeEach(() => {
 describe('POST /api/v1/recipients', () => {
   it('should create a recipient and return 201', async () => {
     mockPrisma.recipient.count.mockResolvedValue(0);
+    mockPrisma.$transaction.mockImplementation(async (fn: (tx: typeof mockPrisma) => Promise<unknown>) => fn(mockPrisma));
     mockPrisma.recipient.create.mockResolvedValue(mockRecipient);
+    mockPrisma.measurementReminder.createMany.mockResolvedValue({ count: 2 });
 
     const request = createRequest('POST', validCreateData, {
       Authorization: `Bearer ${caregiverToken()}`,

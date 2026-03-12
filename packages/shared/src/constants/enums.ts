@@ -66,6 +66,13 @@ export const NOTIFICATION_TYPES = {
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 
+export const REMINDER_TYPES = {
+  MORNING: 'morning',
+  EVENING: 'evening',
+} as const;
+
+export type ReminderType = (typeof REMINDER_TYPES)[keyof typeof REMINDER_TYPES];
+
 export const AI_REPORT_TYPES = {
   HEALTH_SUMMARY: 'health_summary',
   TREND_ANALYSIS: 'trend_analysis',

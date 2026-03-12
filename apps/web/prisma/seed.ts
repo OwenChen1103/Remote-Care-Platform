@@ -76,10 +76,17 @@ async function main() {
 
   if (wangRecipient) {
     await seedMeasurements(wangRecipient.id);
+    await seedReminders(wangRecipient.id);
   }
   await seedMeasurements(liRecipient.id, true);
+  await seedReminders(liRecipient.id);
 
-  console.log('Seed completed: admin + demo user + recipients + 30-day measurements');
+  // Seed notifications for demo caregiver
+  if (wangRecipient) {
+    await seedNotifications(demoUser.id, wangRecipient.id, '王奶奶');
+  }
+
+  console.log('Seed completed: admin + demo user + recipients + measurements + reminders + notifications');
 }
 
 /**
@@ -230,6 +237,89 @@ function generateBg(dayOffset: number, timing: string) {
   }
   // after_meal
   return { value: 110 + (dayOffset % 15), isAbnormal: false };
+}
+
+async function seedReminders(recipientId: string) {
+  const existing = await prisma.measurementReminder.findFirst({
+    where: { recipient_id: recipientId },
+  });
+  if (existing) return;
+
+  await prisma.measurementReminder.createMany({
+    data: [
+      {
+        recipient_id: recipientId,
+        reminder_type: 'morning',
+        reminder_time: new Date('1970-01-01T08:00:00Z'),
+        is_enabled: true,
+      },
+      {
+        recipient_id: recipientId,
+        reminder_type: 'evening',
+        reminder_time: new Date('1970-01-01T20:00:00Z'),
+        is_enabled: true,
+      },
+    ],
+  });
+}
+
+async function seedNotifications(userId: string, recipientId: string, recipientName: string) {
+  const existing = await prisma.notification.count({
+    where: { user_id: userId },
+  });
+  if (existing > 0) return;
+
+  const now = new Date();
+
+  await prisma.notification.createMany({
+    data: [
+      {
+        user_id: userId,
+        type: 'measurement_reminder',
+        title: `${recipientName} 量測提醒`,
+        body: `該為 ${recipientName} 進行早上量測了。`,
+        data: { recipient_id: recipientId, reminder_type: 'morning' },
+        is_read: true,
+        created_at: new Date(now.getTime() - 3 * 60 * 60 * 1000),
+      },
+      {
+        user_id: userId,
+        type: 'measurement_reminder',
+        title: `${recipientName} 量測提醒`,
+        body: `該為 ${recipientName} 進行晚上量測了。`,
+        data: { recipient_id: recipientId, reminder_type: 'evening' },
+        is_read: true,
+        created_at: new Date(now.getTime() - 15 * 60 * 60 * 1000),
+      },
+      {
+        user_id: userId,
+        type: 'abnormal_alert',
+        title: `${recipientName} 血壓連續異常`,
+        body: `${recipientName} 近期血壓有多次異常紀錄，建議關注或安排就醫。`,
+        data: { recipient_id: recipientId, measurement_type: 'blood_pressure' },
+        is_read: false,
+        created_at: new Date(now.getTime() - 1 * 60 * 60 * 1000),
+      },
+      {
+        user_id: userId,
+        type: 'measurement_reminder',
+        title: `${recipientName} 量測提醒`,
+        body: `該為 ${recipientName} 進行早上量測了。`,
+        data: { recipient_id: recipientId, reminder_type: 'morning' },
+        is_read: false,
+        created_at: new Date(now.getTime() - 10 * 60 * 1000),
+      },
+      {
+        user_id: userId,
+        type: 'abnormal_alert',
+        title: `${recipientName} 血糖連續異常`,
+        body: `${recipientName} 近期血糖有多次異常紀錄，建議關注或安排就醫。`,
+        data: { recipient_id: recipientId, measurement_type: 'blood_glucose' },
+        is_read: false,
+        created_at: new Date(now.getTime() - 5 * 60 * 1000),
+      },
+    ],
+  });
 }
 
 main()
