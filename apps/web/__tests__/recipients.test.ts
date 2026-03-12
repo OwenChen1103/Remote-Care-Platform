@@ -49,12 +49,14 @@ function createRequest(
 }
 
 const caregiverToken = () => signJwt({ userId: 'user-aaa', role: 'caregiver' });
+const patientToken = () => signJwt({ userId: 'patient-111', role: 'patient' });
 const adminToken = () => signJwt({ userId: 'admin-bbb', role: 'admin' });
 const otherCaregiverToken = () => signJwt({ userId: 'user-ccc', role: 'caregiver' });
 
 const mockRecipient = {
   id: 'rec-111',
   caregiver_id: 'user-aaa',
+  patient_user_id: 'patient-111',
   name: '王奶奶',
   date_of_birth: new Date('1945-03-15'),
   gender: 'female',
@@ -180,6 +182,23 @@ describe('GET /api/v1/recipients', () => {
       }),
     );
   });
+
+  it('should return only linked recipient for patient', async () => {
+    mockPrisma.recipient.findMany.mockResolvedValue([mockRecipient]);
+    mockPrisma.recipient.count.mockResolvedValue(1);
+
+    const request = createRequest('GET', undefined, {
+      Authorization: `Bearer ${patientToken()}`,
+    });
+    const response = await listHandler(request);
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.recipient.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ patient_user_id: 'patient-111' }),
+      }),
+    );
+  });
 });
 
 // ─── GET /api/v1/recipients/:id ─────────────────────────────
@@ -199,6 +218,17 @@ describe('GET /api/v1/recipients/:id', () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(body.data.id).toBe('rec-111');
+  });
+
+  it('should return recipient for linked patient', async () => {
+    mockPrisma.recipient.findFirst.mockResolvedValue(mockRecipient);
+
+    const request = createRequest('GET', undefined, {
+      Authorization: `Bearer ${patientToken()}`,
+    }, 'http://localhost:3000/api/v1/recipients/rec-111');
+    const response = await getByIdHandler(request, { params });
+
+    expect(response.status).toBe(200);
   });
 
   it('should return RESOURCE_OWNERSHIP_DENIED for non-owner', async () => {

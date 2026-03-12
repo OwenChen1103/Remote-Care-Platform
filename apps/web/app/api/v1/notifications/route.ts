@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
       return errorResponse('AUTH_REQUIRED', '請先登入');
     }
 
-    if (auth.role !== 'caregiver') {
-      return errorResponse('AUTH_FORBIDDEN', '僅委託人可存取通知');
+    if (!['caregiver', 'patient', 'provider', 'admin'].includes(auth.role)) {
+      return errorResponse('AUTH_FORBIDDEN', '此角色無權存取通知');
     }
 
     const url = new URL(request.url);

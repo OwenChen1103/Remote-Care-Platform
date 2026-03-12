@@ -59,6 +59,8 @@ function createRequest(
 }
 
 const caregiverToken = () => signJwt({ userId: 'user-aaa', role: 'caregiver' });
+const patientToken = () => signJwt({ userId: 'patient-111', role: 'patient' });
+const providerToken = () => signJwt({ userId: 'provider-111', role: 'provider' });
 const adminToken = () => signJwt({ userId: 'admin-bbb', role: 'admin' });
 
 const mockNotification = {
@@ -85,6 +87,7 @@ const mockReminder = {
 const mockRecipient = {
   id: 'rec-111',
   caregiver_id: 'user-aaa',
+  patient_user_id: 'patient-111',
   name: '王奶奶',
   deleted_at: null,
 };
@@ -112,15 +115,28 @@ describe('GET /api/v1/notifications', () => {
     expect(body.data[0].type).toBe('measurement_reminder');
   });
 
-  it('should reject admin role', async () => {
+  it('should allow admin role to fetch own notifications', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([mockNotification]);
+    mockPrisma.notification.count.mockResolvedValue(1);
+
     const request = createRequest('GET', undefined, {
       Authorization: `Bearer ${adminToken()}`,
     });
     const response = await listHandler(request);
-    const body = await response.json();
 
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe('AUTH_FORBIDDEN');
+    expect(response.status).toBe(200);
+  });
+
+  it('should allow patient role', async () => {
+    mockPrisma.notification.findMany.mockResolvedValue([mockNotification]);
+    mockPrisma.notification.count.mockResolvedValue(1);
+
+    const request = createRequest('GET', undefined, {
+      Authorization: `Bearer ${patientToken()}`,
+    });
+    const response = await listHandler(request);
+
+    expect(response.status).toBe(200);
   });
 
   it('should require auth', async () => {
@@ -147,6 +163,16 @@ describe('GET /api/v1/notifications/unread-count', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.count).toBe(5);
+  });
+
+  it('should return unread count for provider', async () => {
+    mockPrisma.notification.count.mockResolvedValue(2);
+    const request = createRequest('GET', undefined, {
+      Authorization: `Bearer ${providerToken()}`,
+    }, 'http://localhost:3000/api/v1/notifications/unread-count');
+
+    const response = await unreadCountHandler(request);
+    expect(response.status).toBe(200);
   });
 });
 

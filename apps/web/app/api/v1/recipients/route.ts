@@ -18,15 +18,21 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') ?? '20')));
     const skip = (page - 1) * limit;
 
-    const where: { deleted_at: null; caregiver_id?: string } = { deleted_at: null };
+    const where: { deleted_at: null; caregiver_id?: string; patient_user_id?: string } = {
+      deleted_at: null,
+    };
 
     if (auth.role === 'caregiver') {
       where.caregiver_id = auth.userId;
+    } else if (auth.role === 'patient') {
+      where.patient_user_id = auth.userId;
     } else if (auth.role === 'admin') {
       const caregiverId = url.searchParams.get('caregiver_id');
       if (caregiverId) {
         where.caregiver_id = caregiverId;
       }
+    } else {
+      return errorResponse('AUTH_FORBIDDEN', '此角色無權讀取被照護者資料');
     }
 
     const [recipients, total] = await Promise.all([

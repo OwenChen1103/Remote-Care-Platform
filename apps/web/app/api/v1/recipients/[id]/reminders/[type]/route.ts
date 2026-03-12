@@ -21,26 +21,28 @@ export async function PUT(
       return errorResponse('AUTH_REQUIRED', '請先登入');
     }
 
-    if (auth.role !== 'caregiver') {
-      return errorResponse('AUTH_FORBIDDEN', '僅委託人可更新提醒設定');
+    if (!['caregiver', 'admin'].includes(auth.role)) {
+      return errorResponse('AUTH_FORBIDDEN', '僅委託人或管理員可更新提醒設定');
     }
 
     const { id, type } = await params;
-
     if (!VALID_TYPES.includes(type as (typeof VALID_TYPES)[number])) {
       return errorResponse('VALIDATION_ERROR', '提醒類型須為 morning 或 evening');
     }
 
     const recipient = await prisma.recipient.findFirst({
-      where: { id, caregiver_id: auth.userId, deleted_at: null },
+      where: { id, deleted_at: null },
     });
 
     if (!recipient) {
       return errorResponse('RESOURCE_NOT_FOUND', '找不到此被照護者');
     }
 
-    const body: unknown = await request.json();
+    if (auth.role === 'caregiver' && recipient.caregiver_id !== auth.userId) {
+      return errorResponse('RESOURCE_OWNERSHIP_DENIED', '無權更新此被照護者提醒');
+    }
 
+    const body: unknown = await request.json();
     const parsed = ReminderUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return errorResponse(
