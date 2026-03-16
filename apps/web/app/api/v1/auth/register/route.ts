@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const token = signJwt({ userId: user.id, role: user.role });
+    const token = signJwt({ userId: user.id, role: user.role as import('@remote-care/shared').UserRole });
 
     return successResponse(
       {
