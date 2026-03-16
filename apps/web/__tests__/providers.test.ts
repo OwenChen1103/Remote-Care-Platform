@@ -124,3 +124,125 @@ describe('GET /api/v1/providers', () => {
     expect(json.data).toEqual([]);
   });
 });
+
+// --- Provider Detail [id] routes ---
+
+function createParamsRequest(method: string, id: string, body?: unknown) {
+  const url = new URL(`http://localhost:3000/api/v1/providers/${id}`);
+  return new NextRequest(url, {
+    method,
+    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:3000' } } : {}),
+  });
+}
+
+const mockProviderDetail = {
+  id: 'prov-1',
+  name: '王小明',
+  phone: '0912345678',
+  email: 'wang@test.com',
+  level: 'L1',
+  specialties: [],
+  certifications: [],
+  experience_years: null,
+  service_areas: [],
+  availability_status: 'available',
+  review_status: 'pending',
+  deleted_at: null,
+  created_at: new Date(),
+  updated_at: new Date(),
+};
+
+describe('GET /api/v1/providers/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return provider detail (admin only)', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    mockPrisma.provider.findFirst.mockResolvedValue(mockProviderDetail);
+
+    const { GET } = await import('../app/api/v1/providers/[id]/route');
+    const request = createParamsRequest('GET', 'prov-1');
+    const response = await GET(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.data.id).toBe('prov-1');
+    expect(json.data.name).toBe('王小明');
+  });
+
+  it('should return 404 for non-existent provider', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    mockPrisma.provider.findFirst.mockResolvedValue(null);
+
+    const { GET } = await import('../app/api/v1/providers/[id]/route');
+    const request = createParamsRequest('GET', 'non-existent');
+    const response = await GET(request, { params: Promise.resolve({ id: 'non-existent' }) });
+    const json = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(json.error.code).toBe('RESOURCE_NOT_FOUND');
+  });
+});
+
+describe('PUT /api/v1/providers/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should update provider (admin only)', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    mockPrisma.provider.findFirst.mockResolvedValue(mockProviderDetail);
+    const updatedProvider = { ...mockProviderDetail, name: '李大華', level: 'L2' };
+    mockPrisma.provider.update.mockResolvedValue(updatedProvider);
+
+    const { PUT } = await import('../app/api/v1/providers/[id]/route');
+    const request = createParamsRequest('PUT', 'prov-1', { name: '李大華', level: 'L2' });
+    const response = await PUT(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.data.name).toBe('李大華');
+    expect(json.data.level).toBe('L2');
+  });
+});
+
+describe('DELETE /api/v1/providers/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should soft-delete provider (admin only)', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    mockPrisma.provider.findFirst.mockResolvedValue(mockProviderDetail);
+    mockPrisma.provider.update.mockResolvedValue({ ...mockProviderDetail, deleted_at: new Date() });
+
+    const { DELETE } = await import('../app/api/v1/providers/[id]/route');
+    const request = createParamsRequest('DELETE', 'prov-1');
+    const response = await DELETE(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(mockPrisma.provider.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'prov-1' },
+        data: expect.objectContaining({ deleted_at: expect.any(Date) }),
+      }),
+    );
+  });
+
+  it('should reject non-admin', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'cg-1', role: 'caregiver' });
+
+    const { DELETE } = await import('../app/api/v1/providers/[id]/route');
+    const request = createParamsRequest('DELETE', 'prov-1');
+    const response = await DELETE(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(json.error.code).toBe('AUTH_FORBIDDEN');
+  });
+});
