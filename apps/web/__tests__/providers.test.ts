@@ -246,3 +246,65 @@ describe('DELETE /api/v1/providers/[id]', () => {
     expect(json.error.code).toBe('AUTH_FORBIDDEN');
   });
 });
+
+describe('PUT /api/v1/providers/[id]/review', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('should approve a pending provider', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    mockPrisma.provider.findFirst.mockResolvedValue({
+      id: 'prov-1', review_status: 'pending', deleted_at: null, admin_note: null,
+    });
+    mockPrisma.provider.update.mockResolvedValue({
+      id: 'prov-1', review_status: 'approved', admin_note: '資料完整',
+    });
+
+    const { PUT } = await import('../app/api/v1/providers/[id]/review/route');
+    const request = createParamsRequest('PUT', 'prov-1', {
+      review_status: 'approved', admin_note: '資料完整',
+    });
+    const response = await PUT(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+    expect(response.status).toBe(200);
+    expect(json.data.review_status).toBe('approved');
+  });
+
+  it('should suspend a provider', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+    mockPrisma.provider.findFirst.mockResolvedValue({
+      id: 'prov-1', review_status: 'approved', deleted_at: null, admin_note: null,
+    });
+    mockPrisma.provider.update.mockResolvedValue({
+      id: 'prov-1', review_status: 'suspended', admin_note: '違規',
+    });
+
+    const { PUT } = await import('../app/api/v1/providers/[id]/review/route');
+    const request = createParamsRequest('PUT', 'prov-1', {
+      review_status: 'suspended', admin_note: '違規',
+    });
+    const response = await PUT(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+    expect(response.status).toBe(200);
+    expect(json.data.review_status).toBe('suspended');
+  });
+
+  it('should reject setting review_status to pending', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'admin-1', role: 'admin' });
+
+    const { PUT } = await import('../app/api/v1/providers/[id]/review/route');
+    const request = createParamsRequest('PUT', 'prov-1', { review_status: 'pending' });
+    const response = await PUT(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    const json = await response.json();
+    expect(response.status).toBe(400);
+    expect(json.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('should reject non-admin', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'prov-user', role: 'provider' });
+
+    const { PUT } = await import('../app/api/v1/providers/[id]/review/route');
+    const request = createParamsRequest('PUT', 'prov-1', { review_status: 'approved' });
+    const response = await PUT(request, { params: Promise.resolve({ id: 'prov-1' }) });
+    expect(response.status).toBe(403);
+  });
+});
