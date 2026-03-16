@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   ProviderCreateSchema,
-  ProviderUpdateSchema,
   ProviderReviewSchema,
   ProviderSelfUpdateSchema,
 } from '../src/schemas/provider';
