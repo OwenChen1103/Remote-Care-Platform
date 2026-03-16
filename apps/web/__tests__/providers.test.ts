@@ -308,3 +308,80 @@ describe('PUT /api/v1/providers/[id]/review', () => {
     expect(response.status).toBe(403);
   });
 });
+
+// --- Provider Self-Service /api/v1/provider/me ---
+
+function createMeRequest(method: string, body?: unknown) {
+  const url = new URL('http://localhost:3000/api/v1/provider/me');
+  return new NextRequest(url, {
+    method,
+    ...(body ? { body: JSON.stringify(body), headers: { 'Content-Type': 'application/json', Origin: 'http://localhost:3000' } } : {}),
+  });
+}
+
+describe('GET /api/v1/provider/me', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('should return the authenticated provider profile', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'user-prov-1', role: 'provider' });
+    mockPrisma.provider.findFirst.mockResolvedValue({
+      id: 'prov-1', user_id: 'user-prov-1', name: '王小明', phone: '0912345678',
+      email: 'wang@test.com', level: 'L1', specialties: ['居家照護'],
+      certifications: ['照服員證照'], experience_years: 3, service_areas: ['台北市'],
+      availability_status: 'available', review_status: 'approved',
+      created_at: new Date(), updated_at: new Date(),
+    });
+    const { GET } = await import('../app/api/v1/provider/me/route');
+    const response = await GET(createMeRequest('GET'));
+    const json = await response.json();
+    expect(response.status).toBe(200);
+    expect(json.data.name).toBe('王小明');
+  });
+
+  it('should return 403 if user has no provider profile', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'user-prov-1', role: 'provider' });
+    mockPrisma.provider.findFirst.mockResolvedValue(null);
+    const { GET } = await import('../app/api/v1/provider/me/route');
+    const response = await GET(createMeRequest('GET'));
+    const json = await response.json();
+    expect(response.status).toBe(403);
+    expect(json.error.code).toBe('AUTH_FORBIDDEN');
+  });
+
+  it('should reject non-provider role', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'cg-1', role: 'caregiver' });
+    const { GET } = await import('../app/api/v1/provider/me/route');
+    const response = await GET(createMeRequest('GET'));
+    expect(response.status).toBe(403);
+  });
+});
+
+describe('PUT /api/v1/provider/me', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('should update own availability_status', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'user-prov-1', role: 'provider' });
+    mockPrisma.provider.findFirst.mockResolvedValue({ id: 'prov-1', deleted_at: null });
+    mockPrisma.provider.update.mockResolvedValue({ id: 'prov-1', availability_status: 'busy' });
+    const { PUT } = await import('../app/api/v1/provider/me/route');
+    const response = await PUT(createMeRequest('PUT', { availability_status: 'busy' }));
+    const json = await response.json();
+    expect(response.status).toBe(200);
+    expect(json.data.availability_status).toBe('busy');
+  });
+
+  it('should strip fields not in ProviderSelfUpdateSchema', async () => {
+    mockVerifyAuth.mockResolvedValue({ userId: 'user-prov-1', role: 'provider' });
+    mockPrisma.provider.findFirst.mockResolvedValue({ id: 'prov-1', deleted_at: null });
+    mockPrisma.provider.update.mockResolvedValue({ id: 'prov-1' });
+    const { PUT } = await import('../app/api/v1/provider/me/route');
+    const response = await PUT(createMeRequest('PUT', { level: 'L3', availability_status: 'busy' }));
+    expect(response.status).toBe(200);
+    // level should NOT be passed to prisma update
+    expect(mockPrisma.provider.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({ level: 'L3' }),
+      }),
+    );
+  });
+});
