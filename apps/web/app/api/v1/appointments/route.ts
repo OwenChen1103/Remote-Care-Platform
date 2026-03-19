@@ -1,19 +1,9 @@
 import { NextRequest } from 'next/server';
+import { AppointmentCreateSchema } from '@remote-care/shared';
 import { prisma } from '@/lib/prisma';
 import { verifyAuth } from '@/lib/auth';
 import { successResponse, errorResponse, paginatedResponse } from '@/lib/api-response';
 import { checkOrigin } from '@/lib/csrf';
-import { z } from 'zod';
-
-const AppointmentCreateSchema = z.object({
-  recipient_id: z.string().uuid(),
-  title: z.string().min(1).max(200),
-  hospital_name: z.string().max(200).optional(),
-  department: z.string().max(100).optional(),
-  doctor_name: z.string().max(100).optional(),
-  appointment_date: z.string().refine((s) => !isNaN(Date.parse(s)), '日期格式不正確'),
-  note: z.string().max(500).optional(),
-});
 
 export async function GET(request: NextRequest) {
   try {
