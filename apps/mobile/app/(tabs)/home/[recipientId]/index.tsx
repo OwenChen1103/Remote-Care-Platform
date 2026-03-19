@@ -221,6 +221,12 @@ export default function RecipientDetailScreen() {
         >
           <Text style={styles.quickButtonText}>看趨勢</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.quickButton}
+          onPress={() => router.push(`/(tabs)/home/appointments?recipientId=${recipientId}`)}
+        >
+          <Text style={styles.quickButtonText}>行程管理</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Recent measurements */}
