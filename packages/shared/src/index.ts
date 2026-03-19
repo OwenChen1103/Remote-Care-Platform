@@ -7,6 +7,7 @@ export * from './schemas/provider';
 export * from './schemas/api-response';
 export * from './schemas/ai';
 export * from './schemas/notification';
+export * from './schemas/appointment';
 
 // Constants
 export * from './constants/error-codes';
